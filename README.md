@@ -1,6 +1,6 @@
 # Kohana54 PHP Framework Sample Application
 
-[Kohana54](https://github.com/kohana54/kohana/tree/psr-4/)
+[Kohana54](https://github.com/kohana54/core/tree/psr-4/develop)
 Released under a [BSD license](http://kohanaframework.org/license), Kohana can be used legally for any open source, commercial, or personal project.
 
 ## Composer bootstrap
