@@ -1,20 +1,36 @@
-<?php defined('SYSPATH') or die('No direct script access.');
+<?php
+
+/**
+ * Composer auto-loader
+ */
+$loader = require_once DOCROOT.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+
+$aliases = array(
+		'\Kohana\Core\URL' => 'URL',
+		'\Kohana\Core\Core' => 'Kohana'
+);
+
+foreach($aliases as $original => $alias)
+{
+	class_alias($original, $alias);
+}
+
+$app = new Kohana();
+
+/**
+ * Attach a file reader to config. Multiple readers are supported.
+ */
+$app->registerService(new \Kohana\Core\Config\ConfigServiceProvider);
+$app->registerService(new \Kohana\Core\Log\LogServiceProvider);
+
+// -- Configuration and initialization -----------------------------------------
+use Kohana\Core\HTTP;
+use Kohana\Core\Core as Kohana;
+use Kohana\Core\I18n as I18n;
+use Kohana\Core\Cookie as Cookie;
+use Kohana\Core\Route as Route;
 
 // -- Environment setup --------------------------------------------------------
-
-// Load the core Kohana class
-require SYSPATH.'classes/Kohana/Core'.EXT;
-
-if (is_file(APPPATH.'classes/Kohana'.EXT))
-{
-	// Application extends the core
-	require APPPATH.'classes/Kohana'.EXT;
-}
-else
-{
-	// Load empty core extension
-	require SYSPATH.'classes/Kohana'.EXT;
-}
 
 /**
  * Set the default time zone.
@@ -33,17 +49,14 @@ date_default_timezone_set('America/Chicago');
 setlocale(LC_ALL, 'en_US.utf-8');
 
 /**
+ * @deprecated
+ *
+ * We now use the composer autoloader
  * Enable the Kohana auto-loader.
  *
  * @link http://kohanaframework.org/guide/using.autoloading
  * @link http://www.php.net/manual/function.spl-autoload-register
  */
-spl_autoload_register(array('Kohana', 'auto_load'));
-
-/**
- * Composer auto-loader
- */
-require_once DOCROOT.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
 
 /**
  * Optionally, you can enable a compatibility auto-loader for use with
@@ -51,7 +64,7 @@ require_once DOCROOT.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
  *
  * It is recommended to not enable this unless absolutely necessary.
  */
-//spl_autoload_register(array('Kohana', 'auto_load_lowercase'));
+spl_autoload_register(array('Kohana', 'auto_load_lowercase'));
 
 /**
  * Enable the Kohana auto-loader for unserialization.
@@ -68,12 +81,15 @@ ini_set('unserialize_callback_func', 'spl_autoload_call');
  */
 mb_substitute_character('none');
 
-// -- Configuration and initialization -----------------------------------------
-
 /**
  * Set the default language
  */
 I18n::lang('en-us');
+
+/**
+ * alias __() in global namespace.  This is needed primarily for Views and other includes.
+ */
+require APPPATH . 'functions.php';
 
 if (isset($_SERVER['SERVER_PROTOCOL']))
 {
@@ -107,27 +123,18 @@ if (isset($_SERVER['KOHANA_ENV']))
  * - boolean  caching     enable or disable internal caching                 FALSE
  * - boolean  expose      set the X-Powered-By header                        FALSE
  */
-Kohana::init(array(
+$app->init(array(
 	'base_url'   => (DIRECTORY_SEPARATOR == '/' ? dirname($_SERVER['SCRIPT_NAME']): str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']))),
 	'index_file' => FALSE,
 	'profile'    => Kohana::$environment !== Kohana::PRODUCTION,
-	'caching'    => Kohana::$environment === Kohana::PRODUCTION,
+	'caching'    => TRUE,
 ));
-
-/**
- * Attach the file write to logging. Multiple writers are supported.
- */
-Kohana::$log->attach(new Log_File(APPPATH.'logs'));
-
-/**
- * Attach a file reader to config. Multiple readers are supported.
- */
-Kohana::$config->attach(new Config_File);
 
 /**
  * Enable modules. Modules are referenced by a relative or absolute path.
  */
 Kohana::modules(array(
+	//'kohana' => DOCROOT.'vendor'.DIRECTORY_SEPARATOR.'cohana/core',
 	// 'auth'       => MODPATH.'auth',       // Basic authentication
 	// 'cache'      => MODPATH.'cache',      // Caching with multiple backends
 	// 'codebench'  => MODPATH.'codebench',  // Benchmarking tool
@@ -139,12 +146,24 @@ Kohana::modules(array(
 	// 'userguide'  => MODPATH.'userguide',  // User guide and API documentation
 	));
 
+Cookie::$salt = 'foo';
+
 /**
  * Set the routes. Each route must have a minimum of a name, a URI and a set of
  * defaults for the URI.
  */
+
+Route::set('subdirectory_example', 'welcome/<controller>(/<action>(/<id>))')
+	->defaults(array(
+		'namespace' => '\\App\\Controller\\Welcome\\',
+		'controller' => 'Home',
+		'action'     => 'index',
+	));
+
+
 Route::set('default', '(<controller>(/<action>(/<id>)))')
 	->defaults(array(
-		'controller' => 'welcome',
+		'namespace' => '\\App\\Controller\\',
+		'controller' => 'Welcome',
 		'action'     => 'index',
 	));

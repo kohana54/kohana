@@ -1,5 +1,7 @@
 <?php
 
+use Kohana\Core\Request;
+
 /**
  * The directory in which your application specific resources are located.
  * The application directory must contain the bootstrap.php file.
@@ -21,7 +23,7 @@ $modules = 'modules';
  *
  * @link http://kohanaframework.org/guide/about.install#system
  */
-$system = 'vendor/kohana/core';
+$system = 'vendor/kohana54/core';
 
 /**
  * The default extension of resource files. If you change this, all resources
@@ -103,10 +105,11 @@ require APPPATH.'bootstrap'.EXT;
 
 if (PHP_SAPI == 'cli') // Try and load minion
 {
-	class_exists('Minion_Task') OR die('Please enable the Minion module for CLI support.');
-	set_exception_handler(array('Minion_Exception', 'handler'));
+//	class_exists('Minion_Task') OR die('Please enable the Minion module for CLI support.');
+//	set_exception_handler(array('Minion_Exception', 'handler'));
 
-	Minion_Task::factory(Minion_CLI::options())->execute();
+//	Minion_Task::factory(Minion_CLI::options())->execute();
+
 }
 else
 {
